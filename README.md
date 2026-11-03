@@ -40,5 +40,5 @@ The laws it is held to, the moves it does not yet make, and the order of the nex
 ## Reading this repo
 
 - `.gate/` — laws (ceilings), reads (wall / if yes / if no), verdicts (check, verdict, supersedes, reason).
-- `chains/` — the next chain's targets, the mechanisms carried from earlier rebuilds, and the invariants the repo is held to.
+- `PLAYBOOK.md` — the skill the agents load before touching the tree: read before claiming, measure before counting, edits obey the tree's own laws.
 - `src/` — eight files, one law each, from the byte store up to claims. `scripts/` — the harness.
