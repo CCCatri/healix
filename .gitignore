@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.snapshot.*/
+.snap/
+.gate/audit/
+usecase/
+*.db
+*.db-shm
+*.db-wal
+*.tgz
+*.zip
+.DS_Store
+*.bak

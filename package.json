@@ -1,0 +1,16 @@
+{
+  "name": "healix",
+  "private": false,
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "24",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3"
+  },
+  "scripts": {
+    "gate": "tsx scripts/gate.ts",
+    "run": "tsx scripts/run.ts",
+    "states": "tsx scripts/states.ts .gate/history",
+    "demo": "tsx scripts/demo.ts"
+  }
+}
