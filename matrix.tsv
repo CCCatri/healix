@@ -1,0 +1,23 @@
+tree	revision	concept	evidence	verdict	scope	pointer	intent_date	note
+healix7	74b62ba	abstention	measured	12 of 12 chimeras INSUFFICIENT_EVIDENCE; 107 of 112 Fodors labels INSUFFICIENT_EVIDENCE	judge on synthetic fixture; Fodors local only	README what-the-demo-shows table; scripts/evaluate.ts		verdict word still 'unknown' in code and docs (B5)
+healix7	74b62ba	controlled_perturbation	measured	60 SUPPORTED -> 60 INSUFFICIENT_EVIDENCE when table B loses its non-matching records	population control on the synthetic fixture	README fixture-scope observation; cases/healix-demo.md		
+healix7	74b62ba	fault_injection	measured	invalid label id refused by name (exit 1); removing one valid proposal moves exactly one pair to never-proposed	evaluator on the Fodors export	README evaluation section		fault lives in a local run, not CI
+healix7	74b62ba	regression_verification	measured	60 expected copy pairs present and SUPPORTED; 12 chimera pairs INSUFFICIENT_EVIDENCE	check.ts against expected.tsv	scripts/check.ts; tests/positive/own_copy/expected.tsv		
+healix7	74b62ba	acceptance_criteria_before_run	specified	predictions written in chat before runs; harness targets named per check	harness	.gate/ (check.vN targets)		not yet a dated file a stranger can open
+healix7	74b62ba	acceptance_ledger	measured	verdicts ledger binds landed checks to audit shas	harness record	.gate/verdicts.tsv; .gate/audit/		gateClean and demo/check/evaluate not yet in the ledger (declared pending)
+healix7	74b62ba	provenance	specified	audit manifests carry edit, scorer and output shas; npm lockfile pins dependencies	harness and CI	.gate/audit/*/landing.tsv; package-lock.json		
+healix7	74b62ba	hold_out	not_applicable		no fitting step in the product			
+healix7	74b62ba	accounting_partition	measured	112 labels = 5 never proposed + 107 INSUFFICIENT_EVIDENCE + 0 refuted + 0 SUPPORTED	evaluator	README evaluation table		
+healix7	74b62ba	population_relative_judgment	measured	same 60 pairs, verdict flips with the population; Fodors c2: 267 SUPPORTED with population, 0 without	judge	README fixture-scope observation		
+healix7	74b62ba	clean_reproduction	measured	CI: clean Ubuntu checkout runs npm ci, demo, check; green	synthetic fixture only	.github/workflows/demo.yml; badge		evaluate not run in CI (Elevate)
+analytics	4a09193	abstention	measured	transition answers INSUFFICIENT_EVIDENCE with its reason: 51,136 of 100,000 generated fouls	product/transition.py	checks/test_transition.py printout		
+analytics	4a09193	controlled_perturbation	measured	team attempts 36 -> 60 in one draw; Ridder 6 -> 10; movement confined to mapped columns	engine -> kit handoff	cases/from-a-simulated-game-to-a-player-projection.md; cases/evidence/handoff_20261106_082012		
+analytics	4a09193	fault_injection	measured	11 injected faults each fail at least one case; quality gate 1: P1-P4 each caught on its own line	transition.py; handoff gate 1	checks/test_transition.py; checks/test_quality_gate1_injected_faults.py		
+analytics	4a09193	regression_verification	measured	A2 paired replay UNCHANGED on 2026-11-06; switch-off replay	kit mode, pre vs post adapter	cases/evidence/handoff_20261106_082012/replay_A2.txt		rerun pending after the vocabulary rename
+analytics	4a09193	acceptance_criteria_before_run	measured	acceptance-criteria/*.md dated before runs; runs report against them	engine, handoff	acceptance-criteria/		
+analytics	4a09193	acceptance_ledger	measured	acceptance ledger binds CHARTER lines to a digest; freeze refuses unaccepted lines	slate-kit	slate-kit/proj/acceptance_ledger.json; evaluate.py		digest reset 2026-11-07 with a dated line
+analytics	4a09193	provenance	measured	45 raw files pinned by sha; engine MANIFEST; handoff root draws manifest refuses a sha mismatch	engine, kit	product/RAW_PINS.json; out/engine/MANIFEST.json; slate-kit/draws.py		
+analytics	4a09193	hold_out	specified	engine holds 2022 out; kit reads 2022; one declared hold-out for the joined system is WORK_ORDER 3	engine only	README data partitions; WORK_ORDER.md		
+analytics	4a09193	accounting_partition	measured	3,200 of 3,200 team-games reconciled on attempts and carries; team->player partition FAIL: receivers over in 33,352 of 64,000 games	engine vs record; kit slices vs team budget	checks/reconcile_root_counts_by_position.py; checks/check_targets_partition.py; WORK_ORDER 4		a measured failure is still measured
+analytics	4a09193	population_relative_judgment	not_found		no verdict depends on a comparison population			applies only if an NFL claim needs one
+analytics	4a09193	clean_reproduction	measured	CI runs checks/demo_w15.py from a clean checkout	demo fixture	.github/workflows; checks/demo_w15.py		
