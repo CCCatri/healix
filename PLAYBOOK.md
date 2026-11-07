@@ -1,6 +1,6 @@
 # PLAYBOOK — the healix6 agent skill, kept as history
 
-Not the active workflow for this tree: that is *How the work is done* in README.md (owner, builder, falsifier; targets before code; a plant per check; no ceiling rises; the gate at zero errors). Nothing in this repo reads this file. Written Sep 2026 for the previous tree (healix6) and carried unchanged. The laws it states are the ones `scripts/gate.ts` now enforces. The four edit mechanisms it names (`applyEdits.py`, `editFile.ts`, `anchorAt`, `landEdit`) and `censusTell` were that tree's; they are not in this repo. The two reference files it routes to (`migration.md`, `doctrine.md`) are not published.
+Not the active workflow for this tree: that is *How the work is done* in README.md (owner, builder, falsifier; targets before code; a plant per check; no ceiling rises; the gate at zero errors). The tracked reference scan (git grep, 2026-11-07) found only the README's mention of it. Written Sep 2026 for the previous tree (healix6) and carried unchanged. The laws it states are the ones `scripts/gate.ts` now enforces. The four edit mechanisms it names (`applyEdits.py`, `editFile.ts`, `anchorAt`, `landEdit`) and `censusTell` were that tree's; they are not in this repo. The two reference files it routes to (`migration.md`, `doctrine.md`) are not published.
 
 ---
 
