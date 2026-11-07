@@ -12,6 +12,7 @@
     "run": "tsx scripts/run.ts",
     "states": "tsx scripts/states.ts .gate/history",
     "demo": "tsx scripts/demo.ts",
-    "check": "tsx scripts/check.ts"
+    "check": "tsx scripts/check.ts",
+    "evaluate": "tsx scripts/evaluate.ts"
   }
 }
