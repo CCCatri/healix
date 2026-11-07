@@ -6,6 +6,8 @@ import { listRuns } from "./piece.ts";
 import { countDistinct } from "./view.ts";
 
 export type Priced = {
+  /** the ten highest-scoring within-table pairs after identical pairs are removed (part 0 = table A, 1 = table B): read-only, for instruments; no verdict reads it */
+  readonly topInside: readonly { readonly part: number; readonly first: number; readonly second: number; readonly score: number }[];
   readonly views: readonly number[];
   /** scores of the pairs inside some piece touched, sorted ascending */
   readonly insideSorted: Float32Array;
@@ -185,7 +187,9 @@ export function priceSegment(matrix: Matrix, piecesPerView: readonly Pieces[], v
   keptB.forEach((pairIndex, sortedAt) => { insideSorted[keptA.length + sortedAt] = findSlot(partB.insideScore, pairIndex); });
   insideSorted.sort();
   const population = pairsInside - insideSame;
-  return { views, insideSorted, insideZeros: population - insideSorted.length, insideSame, acrossScore, touchedAcross: Int32Array.from(acrossTouched), inside: population, across: pairsAcross, recordsA, recordsB, work: workCount.workTotal, workIdentity: identityCount.workTotal };
+  const describeInside = (partSlots: PartSlots, part: number, kept: readonly number[]) => kept.map((pairIndex) => ({ part, first: Math.floor(pairIndex / partSlots.recordCount), second: pairIndex % partSlots.recordCount, score: findSlot(partSlots.insideScore, pairIndex) }));
+  const topInside = [...describeInside(partA, 0, keptA), ...describeInside(partB, 1, keptB)].sort((left, right) => right.score - left.score).slice(0, 10);
+  return { views, insideSorted, insideZeros: population - insideSorted.length, insideSame, acrossScore, touchedAcross: Int32Array.from(acrossTouched), inside: population, across: pairsAcross, recordsA, recordsB, work: workCount.workTotal, workIdentity: identityCount.workTotal, topInside };
 }
 
 function countAtLeast(sortedScores: Float32Array, scoreValue: number): number {
