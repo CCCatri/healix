@@ -8,6 +8,8 @@
 
 ## Run it
 
+The case, with the measurements and the harness fix that made the demo runnable: [`cases/healix-demo.md`](cases/healix-demo.md).
+
 npm ci
 npm run demo -- tests
 npm run check
