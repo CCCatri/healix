@@ -13,6 +13,8 @@ jobs:
       - name: check every proposed pair against the fixture's construction
         run: npm run check
       - name: separation at the judge level (0 false confirmations, 0 lost controls on the tracked fixture)
-        run: npm run -s separation -- tests | tee sep.out && grep -q 'current rule: false confirmations 0, lost controls 0' sep.out
+        run: |
+          npm run -s separation -- tests | tee sep.out
+          grep -q 'current rule: false confirmations 0, lost controls 0' sep.out
       - uses: actions/upload-artifact@v4
         with: { name: demo_pairs, path: out/demo_pairs.tsv }
