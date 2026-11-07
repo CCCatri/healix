@@ -13,6 +13,7 @@
     "states": "tsx scripts/states.ts .gate/history",
     "demo": "tsx scripts/demo.ts",
     "check": "tsx scripts/check.ts",
-    "evaluate": "tsx scripts/evaluate.ts"
+    "evaluate": "tsx scripts/evaluate.ts",
+    "separation": "tsx scripts/separation.ts"
   }
 }
