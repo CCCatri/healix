@@ -10,9 +10,11 @@
 
 The case, with the measurements and the harness fix that made the demo runnable: [`cases/healix-demo.md`](cases/healix-demo.md).
 
+```
 npm ci
 npm run demo -- tests
 npm run check
+```
 
 
 `tests/positive/own_copy/` is a tracked fixture of invented customer records (seeded generator; no real data): table A holds 60, table B holds their 60 copies plus 60 different records. The demo also builds 12 stitched records from table A at run time (fields taken from different rows, wrong by construction). It prints the matcher's proposals and the judge's rulings separately, writes every proposed pair with its ruling to `out/demo_pairs.tsv`, and `check` verifies that file against `tests/positive/own_copy/expected.tsv`, which was written from the fixture's construction, never from a run. `check` fails on a wrong pair id even when the counts still match (tested 2026-11-07).
@@ -33,6 +35,20 @@ Two observations at fixture scope, not stated as rules of the method:
 
 The Fodors run is the coverage boundary: 113 proposed, 0 confirmed. No accuracy claim is made on real data.
 
+## Where the labeled matches are lost (measured 2026-11-07)
+
+`npm run evaluate -- <table> <labels.csv> <a column> <b column> <tableA.csv> <tableB.csv>` (`scripts/evaluate.ts`) joins a file of expected matches, kept outside the product's decision path, to the pairs export written by the demo, checks every label id against its own table, and gives every labeled match exactly one outcome. On Fodors–Zagat (112 labeled matches; inputs pinned by sha256 f3b08d69…, f8daf43e…; labels b336a18c…):
+
+| Outcome | Count |
+|---|---|
+| never proposed by the matcher | 5 |
+| proposed, judge unknown | 107 |
+| proposed, judge refuted | 0 |
+| proposed, judge right | 0 |
+| proposals not in the labels (ungraded) | 6 |
+
+Candidate recall is 107 of 112: on this fixture the matcher finds almost every known match and the judge leaves them undecided. A proposer change could recover at most five; the loss on this fixture is at confirmation. The traced pair A#534 ↔ B#219 is a labeled match, proposed, left unknown; its measured chance exceeded the judge's bar by about seven times, which locates what to investigate. The evaluation does not say whether that bar is right or what moving it would do. Plants: a label whose id is in neither table is refused by name (exit 1); removing one valid proposal from a copy of the export moves exactly one pair from unknown to never proposed with the denominator unchanged. The Fodors tables and labels are DeepMatcher/Magellan benchmark files and are not in this repo; run the demo with a tests directory holding them first, so the export contains the Fodors proposals.
+
 ## The commands
 
 **`npm run demo -- <tests dir>`** (`scripts/demo.ts`). Runs own_copy and its stitched records always; when `<tests dir>/unlabeled/fodors_zagat/` exists it also runs the Fodors tables and a Fodors chimera. With no argument it refuses by name. Writes `out/demo_pairs.tsv`.
@@ -45,7 +61,7 @@ The Fodors run is the coverage boundary: 113 proposed, 0 confirmed. No accuracy 
 
 ## Landing status
 
-The changes of 2026-11-03 (`demo.ts`, `judge.ts`, `run.ts`) and 2026-11-07 (`gate.ts` fix, demo fixture, `check.ts`, CI) are committed in git and verified by CI, but their entries in the harness ledger (`.gate/landing.tsv` manifest, falsifier verdict, history point) are pending; `npm run gate` on the author's tree reports that as one LANDING line until they land. The gate fix's scorer and falsifier packet are kept under `.gate/audit/gateClean.try/`.
+The changes of 2026-11-03 (`demo.ts`, `judge.ts`, `run.ts`) and 2026-11-07 (`gate.ts` fix, demo fixture, `check.ts`, `evaluate.ts`, CI) are committed in git and verified by CI, but their entries in the harness ledger (`.gate/landing.tsv` manifest, falsifier verdict, history point) are pending; `npm run gate` on the author's tree reports that as one LANDING line until they land. The gate fix's scorer and falsifier packet are kept under `.gate/audit/gateClean.try/`.
 
 ## Benchmark inputs (not in this repo)
 
@@ -61,8 +77,6 @@ The changes of 2026-11-03 (`demo.ts`, `judge.ts`, `run.ts`) and 2026-11-07 (`gat
 | beer | `splits/structured/beer/tableA.csv` | `splits/structured/beer/tableB.csv` | none |
 
 Sources, as far as this repo's record establishes them: Fodors–Zagat, Beer and the "dirty" set are the public record-matching benchmarks of the DeepMatcher / Magellan collection; the exact dataset version used on Oct 18, 2026, the download location, and the preparation that produced the `tableA.csv` / `tableB.csv` files above are **not recorded in this repo**. The c2 set (copy / exact / same) was built by the author from a source table; how it was built is **not recorded in this repo**. The `.pairs` files' format is read by `scripts/run.ts` and not documented elsewhere.
-
-**Status: not reproducible from this repo as of 2026-11-04.** What is missing: the dataset versions and retrieval steps, the preparation into the layout above, the c2 construction, and a tests directory on disk. Documenting these and, where redistribution is permitted, adding small built sets (c2) are follow-up work; no data was added in this change.
 
 ## Test evidence, and what it does and does not show
 
