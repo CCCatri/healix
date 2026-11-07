@@ -61,7 +61,11 @@ Candidate recall is 107 of 112: on this fixture the matcher finds almost every k
 
 ## Landing status
 
-The changes of 2026-11-03 (`demo.ts`, `judge.ts`, `run.ts`) and 2026-11-07 (`gate.ts` fix, demo fixture, `check.ts`, `evaluate.ts`, CI) are committed in git and verified by CI, but their entries in the harness ledger (`.gate/landing.tsv` manifest, falsifier verdict, history point) are pending; `npm run gate` on the author's tree reports that as one LANDING line until they land. The gate fix's scorer and falsifier packet are kept under `.gate/audit/gateClean.try/`.
+Three records, three different states:
+
+- **Committed in git:** the 2026-11-03 change (`demo.ts`, `judge.ts`, `run.ts`) and the 2026-11-07 changes (`gate.ts` fix, demo fixture, `check.ts`, `evaluate.ts`, CI workflow).
+- **Checked in public CI:** the demo and `check` only (the badge). The Fodors evaluation was run locally on 2026-11-07 against benchmark files not in this repo; CI does not run it.
+- **Recorded in the harness ledger** (`.gate/landing.tsv` manifest, falsifier verdict, history point): none of the above yet. `npm run gate` on the author's tree reports one LANDING line until they land. The gate fix's scorer and falsifier packet (nine checks, approved for the tested clean-clone case) are kept under `.gate/audit/gateClean.try/`.
 
 ## Benchmark inputs (not in this repo)
 
@@ -81,9 +85,9 @@ Sources, as far as this repo's record establishes them: Fodors–Zagat, Beer and
 ## Test evidence, and what it does and does not show
 
 - **Valid cases:** the c2 copies (`c2_copy`, `c2_exact`), where every pair was built to be the same record. The intended expectation is that the judge rules these right.
-- **Known-wrong cases:** the chimeras built by `constructChimera` (`scripts/demo.ts`): records stitched from fields of different rows, wrong by construction unless those rows were one entity. The intended expectation is that the judge rules none of them right.
-- **Real tables:** `fodors_zagat`, `dirty`, `beer`, unlabelled here; the judge is expected to abstain ("unknown") rather than guess.
-- **Where expectations come from:** the valid and known-wrong cases are constructed, so their expected answers follow from construction. The recorded results table above is what the author's Oct 18 run produced; it is a regression baseline for that run, not an independently established expectation.
+- **Known-wrong cases:** the chimeras built by `constructChimera` (`scripts/demo.ts`): records stitched from fields of different rows, wrong by construction unless those rows were one entity. The expectation is that the judge rules none of them right; on 2026-11-07 it ruled all 12 unknown (none refuted).
+- **Real tables:** `fodors_zagat`, `dirty`, `beer`. The matcher and judge never read labels; they run on the tables alone and are expected to abstain ("unknown") rather than guess. The evaluator (`scripts/evaluate.ts`) reads 112 external Fodors labels after the run, to account for the matches the product never confirmed; the labels stay outside the decision path.
+- **Where expectations come from:** the valid and known-wrong cases are constructed, so their expected answers follow from construction. The table under *What the demo shows* is the 2026-11-07 run on commit c3b14ac, reproduced by CI. The Oct 18, 2026 results (judge 0 right on chimeras across three benchmarks; held-out copies with one field cut: Fodors 267 of 267, beer 9 of 2,173, dirty 0 of 1,308; product claiming 101/1,028/504 of 101/1,028/504 chimeras) are a recorded baseline from the author's local runs, not regenerated here; `ASPIRATIONS.md` item 5 names near-duplicates inside the tables as the suspected cause of the held-out losses, which is a separate hypothesis from the Fodors evaluation above and is kept separate until reproduced.
 - **What a run establishes:** on the inputs it was given, that the judge rejected the constructed wrong cases it rejected and accepted the constructed copies it accepted, with the counts it printed. If execution is possible, the actual printed counts, including failures and abstentions, are the evidence. It does not establish general matching correctness, and constructed examples are not labelled real-world pairs.
 - **The gate's own plant:** `scripts/gate.ts` accepts extra root files as fixtures so that a planted forbidden form can be shown to count against a law ceiling. That tests the gate's counting, not the matcher.
 
