@@ -126,7 +126,11 @@ const bodiesFrom = "1792265363";
 if (existsSync(historyRoot)) for (const folderName of readdirSync(historyRoot).sort()) { if (folderName < bodiesFrom) continue; const pointRoot = `${historyRoot}/${folderName}`; const hashPath = `${pointRoot}/files.tsv`; if (!existsSync(hashPath)) { noteError(`.gate/history/${folderName}`, "BODIES\tno files.tsv"); continue; } for (const hashLine of readFileSync(hashPath, "utf8").split("\n")) { if (hashLine.length === 0) continue; const hashFields = hashLine.split("\t"); if (hashFields.length !== 2) { noteError(`.gate/history/${folderName}/files.tsv`, `SHAPE\t${hashLine}`); continue; } const bodyPath = `${pointRoot}/bodies/${findItem(hashFields, 0)}`; if (!existsSync(bodyPath)) { noteError(`.gate/history/${folderName}`, `BODIES\tno body for ${findItem(hashFields, 0)}`); continue; } if (hashFile(bodyPath) !== findItem(hashFields, 1)) noteError(`.gate/history/${folderName}`, `BODIES\tbody differs from files.tsv for ${findItem(hashFields, 0)}`); } }
 /** Law 1, the scorer kept (ruling.lawScorer): a landing's scorer and its saved output are bound to the landing's own commit by a manifest, landing.tsv, of one row and seven columns (check, then path and sha256 of the edit, the scorer and the scorer's output, each a file under .gate/audit), which the commit copies into the new history point. The law starts at the first history point whose stored scripts/gate.ts holds this law's mark, read from content; from there every point whose files.tsv differs from the point before holds its own manifest, and a live tree whose files.tsv differs from the newest point holds .gate/landing.tsv. Every manifest's three files exist under .gate/audit with equal sha256, each sha256 64 hex digits; its edit sha256 is cited in full by a row that is approved and is its check's latest row (a refused row never counts, whatever its check's later verdict); no output sha256 appears in two manifests. Points before files.tsv existed are unknown and source changes before the law's start are a fact: both print as counts, never as errors. The gate checks that a scorer and its output were kept unchanged, not that the output came from running it: that is the falsifier's read of the saved output. */
 const lawMark = "Law 1, the scorer kept (ruling.lawScorer)";
-const auditFiles = new Set(readdirSync(`${rootPath}/.gate/audit`, { recursive: true, encoding: "utf8" }).map((entryPath) => `.gate/audit/${entryPath}`));
+const auditRoot = `${rootPath}/.gate/audit`;
+let auditNames: readonly string[] = [];
+if (!existsSync(auditRoot)) noteError(".gate/audit", "MISSING\tno audit folder; landing manifests cannot be checked");
+else auditNames = readdirSync(auditRoot, { recursive: true, encoding: "utf8" });
+const auditFiles = new Set(auditNames.map((entryPath) => `.gate/audit/${entryPath}`));
 const approvedTexts = verdictRows.filter((verdictRow, rowAt) => findItem(verdictRow, 1) === "approved" && verdictRows.slice(rowAt + 1).every((laterRow) => findItem(laterRow, 0) !== findItem(verdictRow, 0))).map((verdictRow) => verdictRow.join("\t"));
 const outputsSeen = new Set<string>();
 const checkManifest = (manifestPath: string, placeName: string): void => {
@@ -150,7 +154,8 @@ let landingsBefore = 0;
 let landingsBound = 0;
 let lawStarted = false;
 let previousFiles: readonly string[] = [];
-const pointList = readdirSync(historyRoot).sort();
+let pointList: readonly string[] = [];
+if (existsSync(historyRoot)) pointList = readdirSync(historyRoot).sort();
 for (const pointName of pointList) {
   const pointRoot = `${historyRoot}/${pointName}`;
   const pointFiles = readdirSync(pointRoot);
@@ -167,8 +172,9 @@ for (const pointName of pointList) {
   if (sourceChanged && lawStarted && !holdsManifest) noteError(`.gate/history/${pointName}`, "LANDING\tsource changed (files.tsv differs from the point before) and no landing.tsv: the scorer is not kept");
   previousFiles = [filesText];
 }
-const newestFiles = readFileSync(`${historyRoot}/${findItem(pointList, pointList.length - 1)}/files.tsv`, "utf8");
-if (newestFiles !== hashText) { if (readdirSync(`${rootPath}/.gate`).includes("landing.tsv")) checkManifest(`${rootPath}/.gate/landing.tsv`, ".gate/landing.tsv"); else noteError(".gate/landing.tsv", "LANDING\tsource changed (files.tsv differs from the newest history point) and no .gate/landing.tsv: the scorer is not kept"); }
+let newestFiles = "";
+if (pointList.length > 0) newestFiles = readFileSync(`${historyRoot}/${findItem(pointList, pointList.length - 1)}/files.tsv`, "utf8");
+if (pointList.length > 0 && newestFiles !== hashText) { if (readdirSync(`${rootPath}/.gate`).includes("landing.tsv")) checkManifest(`${rootPath}/.gate/landing.tsv`, ".gate/landing.tsv"); else noteError(".gate/landing.tsv", "LANDING\tsource changed (files.tsv differs from the newest history point) and no .gate/landing.tsv: the scorer is not kept"); }
 /** Law 2, product lines named (ruling.productGuard): a CLAIMS or PRODUCT lock line is keyed by its kind and table (its first two words); between two history points whose locks.tsv both exist, a key moves when its line changed, was added or is gone. The law starts at the first history point whose stored scripts/gate.ts holds this law's mark, read from content, and reads no file classes, so a change in any file is guarded alike. From there the moved keys must equal the keys the point's moves.tsv names (one key per line; none when the point holds no moves.tsv); moves.tsv's sha256 is cited in full by an approved row that is its check's latest, and no moves.tsv repeats an earlier one's sha256. A live locks.tsv differing from the newest point is held to .gate/moves.tsv the same way. A key appearing twice in one locks.tsv is an error. Lock changes before the law's start are a fact, printed as a count; product lines moved since are printed as a count. */
 const productMark = "Law 2, product lines named (ruling.productGuard)";
 const productKey = (lockLine: string): string => lockLine.split(" ").slice(0, 2).join(" ");
@@ -220,17 +226,22 @@ for (const pointName of pointList) {
   }
   previousLocks = [locksText];
 }
-const newestLocks = readFileSync(`${historyRoot}/${findItem(pointList, pointList.length - 1)}/locks.tsv`, "utf8");
-const liveLocks = readFileSync(`${rootPath}/.gate/locks.tsv`, "utf8");
-if (newestLocks !== liveLocks) {
+let newestLocks = "";
+if (pointList.length > 0) newestLocks = readFileSync(`${historyRoot}/${findItem(pointList, pointList.length - 1)}/locks.tsv`, "utf8");
+const liveLocksPath = `${rootPath}/.gate/locks.tsv`;
+let liveLocks = "";
+if (!existsSync(liveLocksPath)) noteError(".gate/locks.tsv", "MISSING\tledger absent; not read as empty");
+else liveLocks = readFileSync(liveLocksPath, "utf8");
+if (pointList.length > 0 && newestLocks !== liveLocks) {
   let liveNamed: readonly string[] = [];
   if (readdirSync(`${rootPath}/.gate`).includes("moves.tsv")) liveNamed = checkNamed(`${rootPath}/.gate/moves.tsv`, ".gate/moves.tsv");
   checkMoves(newestLocks, liveLocks, liveNamed, ".gate/locks.tsv");
 }
 /** Law leftover (ruling.leftover): a landing's manifest is moved into its history point at commit, never copied, so each is a leftover against its own law's trigger: .gate/landing.tsv while the live files.tsv equals the newest point's (law 1 reads it only while they differ), .gate/moves.tsv while the live locks.tsv equals the newest point's (law 2 reads it only while they differ); each is refused with its own line. */
-if (newestFiles === hashText && readdirSync(`${rootPath}/.gate`).includes("landing.tsv")) noteError(".gate/landing.tsv", "LEFTOVER\tpresent while the live source equals the newest history point; a commit moves it into the point");
-if (newestLocks === liveLocks && readdirSync(`${rootPath}/.gate`).includes("moves.tsv")) noteError(".gate/moves.tsv", "LEFTOVER\tpresent while the live locks equal the newest history point; a commit moves it into the point");
+if (pointList.length > 0 && newestFiles === hashText && readdirSync(`${rootPath}/.gate`).includes("landing.tsv")) noteError(".gate/landing.tsv", "LEFTOVER\tpresent while the live source equals the newest history point; a commit moves it into the point");
+if (pointList.length > 0 && newestLocks === liveLocks && readdirSync(`${rootPath}/.gate`).includes("moves.tsv")) noteError(".gate/moves.tsv", "LEFTOVER\tpresent while the live locks equal the newest history point; a commit moves it into the point");
 for (const errorLine of [...errorLines].sort()) console.log(errorLine);
+if (errorLines.size > 0) process.exitCode = 1;
 
 /** Words of a camelCase identifier. `_` is a discard and has none; any other identifier matching no word is refused, not counted as none. */
 const countWords = (identifierName: string): number => {

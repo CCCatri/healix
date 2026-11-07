@@ -1,5 +1,5 @@
 /** The demonstration: what the method shows a reader in one screen, on three tables (c2_copy, built copies; fodors_zagat, two real tables; the fodors chimera, records stitched from fields of different rows). It reads the judge's pipeline from judge.ts, the one producer run.ts also reads, and writes nothing: no lock, ledger or history. Every number it prints is measured on this run. A record is named by content: its numbering value where the table has a numbering view, else the first 12 hex of the sha256 of its bytes. Sentences are sorted by content, so which ones print does not depend on row order. argv: the tests directory. */
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync, mkdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { findItem } from "../src/matrix.ts";
 import type { Part } from "../src/record.ts";
@@ -53,21 +53,38 @@ function measureTable(bytesA: Uint8Array, bytesB: Uint8Array): Shown {
 }
 
 const startedAt = Date.now();
+if (process.argv.length < 3) throw new Error("demo REFUSED: no tests directory given; run `npm run demo -- tests` (the tracked fixture) or name a directory in the README's layout");
 const testsDir = findItem(process.argv, 2);
-const [copyA, copyB] = readTables(testsDir, "positive/c2_copy/tableA.csv", "positive/c2_copy/tableB.csv");
-const [fodorsA, fodorsB] = readTables(testsDir, "unlabeled/fodors_zagat/tableA.csv", "unlabeled/fodors_zagat/tableB.csv");
-const chimeraTable = constructChimera(fodorsA, 2);
-const copyShown = measureTable(copyA, copyB);
-const fodorsShown = measureTable(fodorsA, fodorsB);
-const chimeraShown = measureTable(chimeraTable.a, chimeraTable.b);
-const shownList = [{ tableName: "c2_copy", tableShown: copyShown }, { tableName: "fodors_zagat", tableShown: fodorsShown }, { tableName: "fodors chimera", tableShown: chimeraShown }];
+/** The tracked fixture: 60 invented customers in A; B holds their 60 copies plus 60 different invented customers. The judge is measured against the pairs inside the tables, so B carries non-matching records on purpose; a B of copies alone yields all-unknown by construction (measured 2026-11-07). */
+const [ownA, ownB] = readTables(testsDir, "positive/own_copy/tableA.csv", "positive/own_copy/tableB.csv");
+const ownChimera = constructChimera(ownA, 2);
+const ownShown = measureTable(ownA, ownB);
+const ownChimeraShown = measureTable(ownChimera.a, ownChimera.b);
+const shownList = [{ tableName: "own_copy", tableShown: ownShown }, { tableName: "own chimera", tableShown: ownChimeraShown }];
+const fodorsPresent = readdirSync(testsDir).includes("unlabeled") && readdirSync(`${testsDir}/unlabeled`).includes("fodors_zagat");
+let fodorsShownList: Shown[] = [];
+if (fodorsPresent) {
+  const [fodorsA, fodorsB] = readTables(testsDir, "unlabeled/fodors_zagat/tableA.csv", "unlabeled/fodors_zagat/tableB.csv");
+  const fodorsChimera = constructChimera(fodorsA, 2);
+  fodorsShownList = [measureTable(fodorsA, fodorsB), measureTable(fodorsChimera.a, fodorsChimera.b)];
+  shownList.push({ tableName: "fodors_zagat", tableShown: findItem(fodorsShownList, 0) }, { tableName: "fodors chimera", tableShown: findItem(fodorsShownList, 1) });
+}
 console.log("Healix says two records from different tables are one entity, found from the data alone; every number below is measured on this run.");
 console.log("");
 for (const shownItem of shownList) console.log(`${shownItem.tableName}: the product claims ${shownItem.tableShown.judged.claims.length} pairs; the judge rules ${shownItem.tableShown.rulings.right} right, ${shownItem.tableShown.rulings.unknown} unknown, ${shownItem.tableShown.rulings.refuted} refuted.`);
-console.log("\nFive claims the judge confirms (c2_copy, where every copy was built):");
-for (const sentenceText of copyShown.sentences.filter((lineText) => lineText.includes(" are one: ")).slice(0, 5)) console.log(`  ${sentenceText}`);
-console.log("\nThree claims the judge cannot decide (fodors_zagat):");
-for (const sentenceText of fodorsShown.sentences.filter((lineText) => lineText.includes(": can't tell.")).slice(0, 3)) console.log(`  ${sentenceText}`);
-console.log(`\nThe fodors chimera, records stitched from fields of different rows (wrong unless those rows were one entity): the product claimed ${chimeraShown.judged.claims.length}, the judge called ${chimeraShown.rulings.right} right.`);
+console.log("\nFive claims the judge confirms (own_copy, where every copy was built):");
+for (const sentenceText of ownShown.sentences.filter((lineText) => lineText.includes(" are one: ")).slice(0, 5)) console.log(`  ${sentenceText}`);
+console.log(`\nThe own chimera, records stitched from fields of different rows (wrong unless those rows were one entity): the product claimed ${ownChimeraShown.judged.claims.length}, the judge called ${ownChimeraShown.rulings.right} right.`);
+if (fodorsPresent) {
+  const fodorsShown = findItem(fodorsShownList, 0); const chimeraShown = findItem(fodorsShownList, 1);
+  console.log("\nThree claims the judge cannot decide (fodors_zagat):");
+  for (const sentenceText of fodorsShown.sentences.filter((lineText) => lineText.includes(": can't tell.")).slice(0, 3)) console.log(`  ${sentenceText}`);
+  console.log(`\nThe fodors chimera, records stitched from fields of different rows (wrong unless those rows were one entity): the product claimed ${chimeraShown.judged.claims.length}, the judge called ${chimeraShown.rulings.right} right.`);
+}
+/** Every proposed pair and its ruling, machine-readable, for scripts/check.ts: the screen above shows five; the file holds all. */
+const pairLines: string[] = ["table\ta\tb\truling"];
+for (const shownItem of shownList) shownItem.tableShown.judged.claims.forEach((claimItem, claimAt) => pairLines.push(`${shownItem.tableName}\t${readName(shownItem.tableShown.judged, "A", shownItem.tableShown.judged.partA, claimItem.a)}\t${readName(shownItem.tableShown.judged, "B", shownItem.tableShown.judged.partB, claimItem.b)}\t${findItem(shownItem.tableShown.rulings.words, claimAt)}`));
+mkdirSync("out", { recursive: true }); writeFileSync("out/demo_pairs.tsv", pairLines.join("\n") + "\n");
+console.log(`\nEvery proposed pair with its ruling: out/demo_pairs.tsv (${pairLines.length - 1} rows).`);
 console.log(`\nRows reversed, same sentences: ${shownList.map((shownItem) => `${shownItem.tableName} ${shownItem.tableShown.orderSame ? "yes" : "no"}`).join(", ")}.`);
 console.log(`Ran in ${((Date.now() - startedAt) / 1000).toFixed(2)} s.`);

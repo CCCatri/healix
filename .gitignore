@@ -11,3 +11,5 @@ usecase/
 *.zip
 .DS_Store
 *.bak
+out/
+.gate/files.tsv
