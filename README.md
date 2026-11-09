@@ -109,7 +109,7 @@ Three roles. The **owner** (me) sets the laws and rules on what a read may decid
 
 ## What was thrown away
 
-Seven trees since May 2025: 228, 187, 281, 167, 103, 90 and now 20 files. Each rebuild kept the same laws and dropped a variable: learning machinery (bandits, Markov, CEGIS), a dashboard, a parser, three metaphors, a buyer. The laws that survived all seven are the ones below.
+Seven trees since April 2025: 228, 187, 281, 167, 103, 90 and now 20 files. Each rebuild kept the same laws and dropped a variable: learning machinery (bandits, Markov, CEGIS), a dashboard, a parser, three metaphors, a buyer. The laws that survived all seven are the ones below.
 
 ## Where it is going
 
