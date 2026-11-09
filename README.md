@@ -6,6 +6,8 @@
 
 **Why it exists, in my words.** Healix is a tool I developed based on the clear gaps found in inefficiently attempting to vibe code large projects with LLMs. Then I was contracted to build the LeNoble Lumber learning platform, in which I tried to do with an LLM.. this turned out chaotic and inefficient.. which brought me back to completing Healix. Hallucinations are context failures, Healix makes context failures unconstructable. Healix6 shows it took 5 previous iterations to finally understand that we were building a house on gravel never really knowing what variables we were measuring. The previous versions of Healix ballooned to hundreds of files due to hardening lies that were allowed through side doors.. but now I realize focused restraint is better. I do not want strings, sentinels, as casts, guards, shorthand, aliases to exist in the project. The judge needs established from the start as a verification layer through Healix, used to dogfood itself to verify its own product through the iterative development.
 
+**LeNoble, after the learning platform.** The same contract moved to merger data work (January to March 2026): Healix3's spreadsheet adapter ran on the customer import file. The customer data is not in this repository.
+
 ## Run it
 
 The case, with the measurements and the harness fix that made the demo runnable: [`cases/healix-demo.md`](cases/healix-demo.md).
