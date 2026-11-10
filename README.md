@@ -1,8 +1,8 @@
 # Healix
 
-[![demo](https://github.com/CCCatri/healix/actions/workflows/demo.yml/badge.svg)](https://github.com/CCCatri/healix/actions/workflows/demo.yml) — on every push, a clean Ubuntu checkout runs `npm ci`, `npm run demo -- tests`, `npm run check`: all 60 built copy pairs confirmed, all 12 stitched records left unknown, verified pair by pair.
+[![demo](https://github.com/CCCatri/healix/actions/workflows/demo.yml/badge.svg)](https://github.com/CCCatri/healix/actions/workflows/demo.yml) — on every push, a clean Ubuntu checkout runs `npm ci`, `npm run demo -- tests`, `npm run check`: all 60 built copy pairs SUPPORTED, all 12 stitched records INSUFFICIENT_EVIDENCE, verified pair by pair.
 
-**One sentence.** Healix reads two tables of records and, for each pair the matcher proposes, says whether the judge confirms them as one record ("right"), cannot tell ("unknown"), or refutes them, with the measured reason. The matcher and the judge are two stages with different jobs, reading the same extracted pieces. Internal consistency is not real-world correctness: a "right" means the records agree with each other under the checks run against the rest of the tables, not that they are the same entity in the world.
+**One sentence.** Healix reads two tables of records and, for each pair the matcher proposes, rules each one SUPPORTED (the judge confirms them as one record), INSUFFICIENT_EVIDENCE (it cannot tell, and says what is missing) or REFUTED, with the measured reason. The matcher and the judge are two stages with different jobs, reading the same extracted pieces. Internal consistency is not real-world correctness: SUPPORTED means the records agree with each other under the checks run against the rest of the tables, not that they are the same entity in the world.
 
 **Why it exists, in my words.** Healix is a tool I developed based on the clear gaps found in inefficiently attempting to vibe code large projects with LLMs. Then I was contracted to build the LeNoble Lumber learning platform, in which I tried to do with an LLM.. this turned out chaotic and inefficient.. which brought me back to completing Healix. Hallucinations are context failures, Healix makes context failures unconstructable. Healix6 shows it took 5 previous iterations to finally understand that we were building a house on gravel never really knowing what variables we were measuring. The previous versions of Healix ballooned to hundreds of files due to hardening lies that were allowed through side doors.. but now I realize focused restraint is better. I do not want strings, sentinels, as casts, guards, shorthand, aliases to exist in the project. The judge needs established from the start as a verification layer through Healix, used to dogfood itself to verify its own product through the iterative development.
 
@@ -25,15 +25,15 @@ npm run check
 
 | Case | Matcher proposed | Judge ruled |
 |---|---|---|
-| 60 built copies (B holds 60 non-matching records too) | 60 | 60 right, 0 unknown |
-| 12 stitched records from table A | 12 | 0 right, 12 unknown |
-| Same 60 copies, B reduced to the copies alone | 60 | 0 right, 60 unknown |
-| Fodors–Zagat (real tables, not in this repo) | 113 | 0 right, 113 unknown |
+| 60 built copies (B holds 60 non-matching records too) | 60 | 60 SUPPORTED, 0 INSUFFICIENT_EVIDENCE |
+| 12 stitched records from table A | 12 | 0 SUPPORTED, 12 INSUFFICIENT_EVIDENCE |
+| Same 60 copies, B reduced to the copies alone | 60 | 0 SUPPORTED, 60 INSUFFICIENT_EVIDENCE |
+| Fodors–Zagat (real tables, not in this repo) | 113 | 0 SUPPORTED, 113 INSUFFICIENT_EVIDENCE |
 
 Two observations at fixture scope, not stated as rules of the method:
 
 - **The judge's bar is set by the population it is given.** A pair is SUPPORTED when its agreement outscores every pair of different records inside the tables (rank 0) and that floor, 1/(inside+1), sits under the bar, 1/(across+1). Measured consequences: with table B reduced to the copies alone, inside pairs are fewer than across pairs, the floor sits above the bar and all 60 rulings move to INSUFFICIENT_EVIDENCE (on c2: 267 SUPPORTED with its 266 non-matching rows, 0 without); and where no two different records in a population share anything rare, one rare shared value outweighs several disagreements and confirms — three stitched records on a 65-row variant, four on a co-located 60-row variant, none on the tracked fixture or on c2 (`tests/negative/README.md`). A population-relative judge is only as calibrated as the richest agreement between different records in its population; `scripts/separation.ts` guards the tracked fixture in CI, and whether a population-independent floor is worth its measured cost (51 of 267 true c2 copies for the one candidate tried) is WORK_ORDER 1.
-- **Agreement is by shared piece, and a changed field can drop a pair at the matcher.** Changing one copy's phone to a number sharing no piece removed `AddressTelephone1` from that pair's agreement list and the judge still confirmed it on the other seven fields (the practical case: two records that disagree on a field and are the same customer). Changing the same copy's phone, contact and email removed the pair from the matcher's proposals: 59 proposed, 59 right. A pair the matcher never proposes receives no judge verdict.
+- **Agreement is by shared piece, and a changed field can drop a pair at the matcher.** Changing one copy's phone to a number sharing no piece removed `AddressTelephone1` from that pair's agreement list and the judge still confirmed it on the other seven fields (the practical case: two records that disagree on a field and are the same customer). Changing the same copy's phone, contact and email removed the pair from the matcher's proposals: 59 proposed, 59 SUPPORTED. A pair the matcher never proposes receives no judge verdict.
 
 The Fodors run is the coverage boundary: 113 proposed, 0 confirmed. No accuracy claim is made on real data.
 
@@ -44,18 +44,18 @@ The Fodors run is the coverage boundary: 113 proposed, 0 confirmed. No accuracy 
 | Outcome | Count |
 |---|---|
 | never proposed by the matcher | 5 |
-| proposed, judge unknown | 107 |
-| proposed, judge refuted | 0 |
-| proposed, judge right | 0 |
+| proposed, judge INSUFFICIENT_EVIDENCE | 107 |
+| proposed, judge REFUTED | 0 |
+| proposed, judge SUPPORTED | 0 |
 | proposals not in the labels (ungraded) | 6 |
 
-Candidate recall is 107 of 112: on this fixture the matcher finds almost every known match and the judge leaves them undecided. A proposer change could recover at most five; the loss on this fixture is at confirmation. The traced pair A#534 ↔ B#219 is a labeled match, proposed, left unknown; its measured chance exceeded the judge's bar by about seven times, which locates what to investigate. The evaluation does not say whether that bar is right or what moving it would do. Plants: a label whose id is in neither table is refused by name (exit 1); removing one valid proposal from a copy of the export moves exactly one pair from unknown to never proposed with the denominator unchanged. The Fodors tables and labels are DeepMatcher/Magellan benchmark files and are not in this repo; run the demo with a tests directory holding them first, so the export contains the Fodors proposals.
+Candidate recall is 107 of 112: on this fixture the matcher finds almost every known match and the judge leaves them undecided. A proposer change could recover at most five; the loss on this fixture is at confirmation. The traced pair A#534 ↔ B#219 is a labeled match, proposed, left INSUFFICIENT_EVIDENCE; its measured chance exceeded the judge's bar by about seven times, which locates what to investigate. The evaluation does not say whether that bar is right or what moving it would do. Injected faults: a label whose id is in neither table is refused by name (exit 1); removing one valid proposal from a copy of the export moves exactly one pair from INSUFFICIENT_EVIDENCE to never proposed with the denominator unchanged. The Fodors tables and labels are DeepMatcher/Magellan benchmark files and are not in this repo; run the demo with a tests directory holding them first, so the export contains the Fodors proposals.
 
 ## The commands
 
 **`npm run demo -- <tests dir>`** (`scripts/demo.ts`). Runs own_copy and its stitched records always; when `<tests dir>/unlabeled/fodors_zagat/` exists it also runs the Fodors tables and a Fodors chimera. With no argument it refuses by name. Writes `out/demo_pairs.tsv`.
 
-**`npm run check`** (`scripts/check.ts`). Reads `out/demo_pairs.tsv` and `tests/positive/own_copy/expected.tsv`; exit 1 unless every expected copy pair is proposed and ruled right and every stitched pair is ruled unknown.
+**`npm run check`** (`scripts/check.ts`). Reads `out/demo_pairs.tsv` and `tests/positive/own_copy/expected.tsv`; exit 1 unless every expected copy pair is proposed and ruled SUPPORTED and every stitched pair is ruled INSUFFICIENT_EVIDENCE.
 
 **`npm run gate`** (`scripts/gate.ts`). The development ledger check over this tree: compiles, counts the forms the laws forbid against the ceilings in `.gate/laws.tsv`, checks the ledgers against the newest `.gate/history` point. `.gate/audit/` and `.gate/history/` are not published, so on a clean clone the gate reports them as MISSING and exits 1; it no longer crashes (fixed 2026-11-07: five bare reads, and an error line now sets the exit status). Its success control is the author's recorded tree.
 
@@ -86,10 +86,10 @@ Sources. Beer comes from the DeepMatcher benchmark collection: `Structured.zip` 
 
 ## Test evidence, and what it does and does not show
 
-- **Valid cases:** the c2 copies (`c2_copy`, `c2_exact`), where every pair was built to be the same record. The intended expectation is that the judge rules these right.
+- **Valid cases:** the c2 copies (`c2_copy`, `c2_exact`), where every pair was built to be the same record. The intended expectation is that the judge rules these SUPPORTED.
 - **Known-wrong cases confirmed at the judge level (2026-11-07):** on two variants of the fixture (`tests/negative/`) the judge ruled stitched records SUPPORTED on one rare shared value plus common ones; the mechanism and its measured bounds are in `tests/negative/README.md` and WORK_ORDER 1. SUPPORTED is a provisional verdict word (vocabulary row OPEN).
-- **Known-wrong cases:** the chimeras built by `constructChimera` (`scripts/demo.ts`): records stitched from fields of different rows, wrong by construction unless those rows were one entity. The expectation is that the judge rules none of them right; on the tracked synthetic fixture on 2026-11-07 it ruled all 12 unknown (none refuted).
-- **Real tables:** `fodors_zagat`, `dirty`, `beer`. The matcher and judge never read labels; they run on the tables alone and are expected to abstain ("unknown") rather than guess. The evaluator (`scripts/evaluate.ts`) reads 112 external Fodors labels after the run, to account for the matches the product never confirmed; the labels stay outside the decision path.
+- **Known-wrong cases:** the chimeras built by `constructChimera` (`scripts/demo.ts`): records stitched from fields of different rows, wrong by construction unless those rows were one entity. The expectation is that the judge rules none of them SUPPORTED; on the tracked synthetic fixture on 2026-11-07 it ruled all 12 INSUFFICIENT_EVIDENCE (none REFUTED).
+- **Real tables:** `fodors_zagat`, `dirty`, `beer`. The matcher and judge never read labels; they run on the tables alone and are expected to abstain (INSUFFICIENT_EVIDENCE) rather than guess. The evaluator (`scripts/evaluate.ts`) reads 112 external Fodors labels after the run, to account for the matches the product never confirmed; the labels stay outside the decision path.
 - **Where expectations come from:** the expected copy pairs and stitched cases come from how the synthetic fixture was built. Public CI checks those fixture results pair by pair. The Nov 7 Fodors result was measured locally using external benchmark files. The Oct 18 runs are historical baselines, not regenerated here. `ASPIRATIONS.md` records the hypothesis about near-duplicates that came out of that earlier work; it is kept separate from the Fodors evaluation above until reproduced.
 - **What a run establishes:** on the inputs it was given, that the judge rejected the constructed wrong cases it rejected and accepted the constructed copies it accepted, with the counts it printed. If execution is possible, the actual printed counts, including failures and abstentions, are the evidence. It does not establish general matching correctness, and constructed examples are not labelled real-world pairs.
 - **The gate's own plant:** `scripts/gate.ts` accepts extra root files as fixtures so that a planted forbidden form can be shown to count against a law ceiling. That tests the gate's counting, not the matcher.

@@ -86,8 +86,8 @@ export function judgeClaims(judgedTables: Judged): Rulings {
     const claimA = readRecord(cellMatrix, judgedTables.partA, claimItem.a); const claimB = readRecord(cellMatrix, judgedTables.partB, claimItem.b);
     const verdictCell = judgePair(cellMatrix, judgedTables.priced, judgedTables.floorCell, claimItem.a, claimItem.b, [claimItem.cell]);
     const otherRights = rightTexts.filter((rightText) => (rightText.textA === claimA) !== (rightText.textB === claimB));
-    if (otherRights.length > 0) { refutePair(cellMatrix, verdictCell, findItem(otherRights, 0).cell); refutedCount += 1; firedKeys.push(joinPair(readBody(cellMatrix.listBytes(findItem(judgedTables.partA.records, claimItem.a)), judgedTables.numberingFields), claimB)); wordList.push("refuted"); continue; }
-    cellMatrix.judgeWay(verdictCell, () => { rightCount += 1; wordList.push("right"); }, () => { refutedCount += 1; wordList.push("refuted"); }, () => { unknownCount += 1; wordList.push("unknown"); });
+    if (otherRights.length > 0) { refutePair(cellMatrix, verdictCell, findItem(otherRights, 0).cell); refutedCount += 1; firedKeys.push(joinPair(readBody(cellMatrix.listBytes(findItem(judgedTables.partA.records, claimItem.a)), judgedTables.numberingFields), claimB)); wordList.push("REFUTED"); continue; }
+    cellMatrix.judgeWay(verdictCell, () => { rightCount += 1; wordList.push("SUPPORTED"); }, () => { refutedCount += 1; wordList.push("REFUTED"); }, () => { unknownCount += 1; wordList.push("INSUFFICIENT_EVIDENCE"); });
   }
   return { right: rightCount, refuted: refutedCount, unknown: unknownCount, firedKeys, words: wordList };
 }

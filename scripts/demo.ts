@@ -36,8 +36,8 @@ function writeSentence(judgedTables: Judged, claimItem: Claim, wordText: string)
   const agreeList = listAgreeing(judgedTables, claimItem);
   const fieldsText = agreeList.length > 0 ? agreeList.join("+") : "no field";
   const priceText = `chance ${priceAcross(judgedTables.priced, claimItem.a, claimItem.b).chance.toPrecision(3)} against the judge's bar ${judgedTables.chanceBar.toPrecision(3)}`;
-  if (wordText === "right") return `${namesText} are one: ${fieldsText} agree, ${priceText}; refuted if a judge-right pair holds exactly one of these two records.`;
-  if (wordText === "unknown") return `${namesText}: can't tell. Measured: ${fieldsText} agree, ${priceText}. Decided by: a chance at or under that bar.`;
+  if (wordText === "SUPPORTED") return `${namesText} are one: ${fieldsText} agree, ${priceText}; REFUTED if a SUPPORTED pair holds exactly one of these two records.`;
+  if (wordText === "INSUFFICIENT_EVIDENCE") return `${namesText}: can't tell. Measured: ${fieldsText} agree, ${priceText}. Decided by: a chance at or under that bar.`;
   throw new Error(`demo REFUSED: ruling ${wordText} on ${namesText} has no verb in the closed list`);
 }
 
@@ -71,15 +71,15 @@ if (fodorsPresent) {
 }
 console.log("Healix says two records from different tables are one entity, found from the data alone; every number below is measured on this run.");
 console.log("");
-for (const shownItem of shownList) console.log(`${shownItem.tableName}: the product claims ${shownItem.tableShown.judged.claims.length} pairs; the judge rules ${shownItem.tableShown.rulings.right} right, ${shownItem.tableShown.rulings.unknown} unknown, ${shownItem.tableShown.rulings.refuted} refuted.`);
+for (const shownItem of shownList) console.log(`${shownItem.tableName}: the product claims ${shownItem.tableShown.judged.claims.length} pairs; the judge rules ${shownItem.tableShown.rulings.right} SUPPORTED, ${shownItem.tableShown.rulings.unknown} INSUFFICIENT_EVIDENCE, ${shownItem.tableShown.rulings.refuted} REFUTED.`);
 console.log("\nFive claims the judge confirms (own_copy, where every copy was built):");
 for (const sentenceText of ownShown.sentences.filter((lineText) => lineText.includes(" are one: ")).slice(0, 5)) console.log(`  ${sentenceText}`);
-console.log(`\nThe own chimera, records stitched from fields of different rows (wrong unless those rows were one entity): the product claimed ${ownChimeraShown.judged.claims.length}, the judge called ${ownChimeraShown.rulings.right} right.`);
+console.log(`\nThe own chimera, records stitched from fields of different rows (wrong unless those rows were one entity): the product claimed ${ownChimeraShown.judged.claims.length}, the judge ruled ${ownChimeraShown.rulings.right} SUPPORTED.`);
 if (fodorsPresent) {
   const fodorsShown = findItem(fodorsShownList, 0); const chimeraShown = findItem(fodorsShownList, 1);
   console.log("\nThree claims the judge cannot decide (fodors_zagat):");
   for (const sentenceText of fodorsShown.sentences.filter((lineText) => lineText.includes(": can't tell.")).slice(0, 3)) console.log(`  ${sentenceText}`);
-  console.log(`\nThe fodors chimera, records stitched from fields of different rows (wrong unless those rows were one entity): the product claimed ${chimeraShown.judged.claims.length}, the judge called ${chimeraShown.rulings.right} right.`);
+  console.log(`\nThe fodors chimera, records stitched from fields of different rows (wrong unless those rows were one entity): the product claimed ${chimeraShown.judged.claims.length}, the judge ruled ${chimeraShown.rulings.right} SUPPORTED.`);
 }
 /** Every proposed pair and its ruling, machine-readable, for scripts/check.ts: the screen above shows five; the file holds all. */
 const pairLines: string[] = ["table\ta\tb\truling"];

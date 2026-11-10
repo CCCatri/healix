@@ -1,4 +1,4 @@
-/** The evaluation. Joins a labels file of expected matches (two id columns, outside the product's decision path) to a pairs export (every pair the matcher proposed, with the judge's ruling) for one table name, after checking every label id against its own input table. Every labeled pair gets exactly one outcome: never proposed, proposed and unknown, proposed and refuted, proposed and right; the four sum to the distinct label count or the run refuses. A label whose id is in neither table is a refusal, never a matcher miss. Proposals absent from the labels are reported as unlabeled, never graded. argv: <table name as printed by demo> <labels csv> <a column> <b column> <tableA csv> <tableB csv> [pairs export, default out/demo_pairs.tsv]. */
+/** The evaluation. Joins a labels file of expected matches (two id columns, outside the product's decision path) to a pairs export (every pair the matcher proposed, with the judge's ruling) for one table name, after checking every label id against its own input table. Every labeled pair gets exactly one outcome: never proposed, proposed and INSUFFICIENT_EVIDENCE, proposed and REFUTED, proposed and SUPPORTED; the four sum to the distinct label count or the run refuses. A label whose id is in neither table is a refusal, never a matcher miss. Proposals absent from the labels are reported as unlabeled, never graded. argv: <table name as printed by demo> <labels csv> <a column> <b column> <tableA csv> <tableB csv> [pairs export, default out/demo_pairs.tsv]. */
 import { readFileSync } from "node:fs";
 import { findItem } from "../src/matrix.ts";
 const argList = process.argv.slice(2);
@@ -23,13 +23,13 @@ let neverProposed = 0; let proposedUnknown = 0; let proposedRefuted = 0; let pro
 for (const pairKey of labeledPairs) {
   if (!proposedPairs.has(pairKey)) { neverProposed += 1; neverList.push(pairKey); continue; }
   const rulingWord = proposedPairs.get(pairKey);
-  if (rulingWord === "unknown") proposedUnknown += 1; else if (rulingWord === "refuted") proposedRefuted += 1; else if (rulingWord === "right") proposedRight += 1; else throw new Error(`evaluate REFUSED: ruling ${rulingWord} on ${pairKey} is not in the closed list`);
+  if (rulingWord === "INSUFFICIENT_EVIDENCE") proposedUnknown += 1; else if (rulingWord === "REFUTED") proposedRefuted += 1; else if (rulingWord === "SUPPORTED") proposedRight += 1; else throw new Error(`evaluate REFUSED: ruling ${rulingWord} on ${pairKey} is not in the closed list`);
 }
 const unlabeledList = [...proposedPairs.keys()].filter((pairKey) => !labeledPairs.has(pairKey));
 const outcomeTotal = neverProposed + proposedUnknown + proposedRefuted + proposedRight;
 if (outcomeTotal !== labeledPairs.size) throw new Error(`evaluate REFUSED: outcomes ${outcomeTotal} do not sum to labels ${labeledPairs.size}`);
 console.log(`EVALUATE ${tableName}: ${labeledPairs.size} labeled matches (every id present in its table) | ${proposedPairs.size} proposed by the matcher`);
-console.log(`  never proposed: ${neverProposed}`); console.log(`  proposed, judge unknown: ${proposedUnknown}`); console.log(`  proposed, judge refuted: ${proposedRefuted}`); console.log(`  proposed, judge right: ${proposedRight}`);
+console.log(`  never proposed: ${neverProposed}`); console.log(`  proposed, judge INSUFFICIENT_EVIDENCE: ${proposedUnknown}`); console.log(`  proposed, judge REFUTED: ${proposedRefuted}`); console.log(`  proposed, judge SUPPORTED: ${proposedRight}`);
 console.log(`  proposals not in the labels (unlabeled, not graded): ${unlabeledList.length}`);
 console.log(`  candidate recall (labeled matches the matcher proposed): ${labeledPairs.size - neverProposed} of ${labeledPairs.size}`);
 for (const pairKey of neverList.slice(0, 10)) console.log(`  never proposed: ${pairKey.replace("\t", " <-> ")}`);
